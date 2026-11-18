@@ -1,0 +1,15 @@
+# render.yaml — Render.com deploy config
+
+services:
+  - type: web
+    name: z3nith-uwu-panel
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python main.py
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: PORT
+        value: "5000"
+      - key: DB_PATH
+        value: /tmp/z3nith.db
