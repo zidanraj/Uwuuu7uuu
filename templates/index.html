@@ -1,0 +1,227 @@
+<!-- templates/index.html — Z3NITH UWU PANEL full 3D UI -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Z3NITH UWU PANEL</title>
+<link rel="stylesheet" href="/static/style.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.6.1/socket.io.min.js"></script>
+</head>
+<body>
+<div class="scene">
+  <!-- Animated background particles -->
+  <div class="particles" id="particles"></div>
+
+  <!-- Sidebar -->
+  <nav class="sidebar glass-card">
+    <div class="logo">
+      <span class="logo-z">Z</span><span class="logo-3">3</span><span class="logo-n">N</span><span class="logo-ith">ITH</span>
+      <div class="logo-sub">UWU PANEL</div>
+    </div>
+    <ul class="nav-links">
+      <li class="active" data-tab="dashboard"><span class="icon">⚡</span>Dashboard</li>
+      <li data-tab="accounts"><span class="icon">👥</span>Accounts</li>
+      <li data-tab="give"><span class="icon">💸</span>Give All</li>
+      <li data-tab="captcha"><span class="icon">🔑</span>Captcha Keys</li>
+      <li data-tab="settings"><span class="icon">⚙️</span>Settings</li>
+      <li data-tab="logs"><span class="icon">📋</span>Logs</li>
+    </ul>
+    <div class="sidebar-footer">
+      <div class="status-dot" id="globalStatus"></div>
+      <span id="globalStatusText">Idle</span>
+    </div>
+  </nav>
+
+  <!-- Main -->
+  <main class="main-content">
+
+    <!-- DASHBOARD TAB -->
+    <div class="tab active" id="tab-dashboard">
+      <div class="tab-header">
+        <h1 class="tab-title">Dashboard</h1>
+        <div class="btn-group">
+          <button class="btn btn-green" onclick="startAll()">▶ START ALL</button>
+          <button class="btn btn-red"   onclick="stopAll()">■ STOP ALL</button>
+        </div>
+      </div>
+      <div class="stats-grid" id="statsGrid">
+        <div class="stat-card glass-card">
+          <div class="stat-label">Total Accounts</div>
+          <div class="stat-value" id="statTotal">0</div>
+        </div>
+        <div class="stat-card glass-card">
+          <div class="stat-label">Running</div>
+          <div class="stat-value green" id="statRunning">0</div>
+        </div>
+        <div class="stat-card glass-card">
+          <div class="stat-label">Total Hunts</div>
+          <div class="stat-value" id="statHunts">0</div>
+        </div>
+        <div class="stat-card glass-card">
+          <div class="stat-label">Total Battles</div>
+          <div class="stat-value" id="statBattles">0</div>
+        </div>
+        <div class="stat-card glass-card">
+          <div class="stat-label">Total Commands</div>
+          <div class="stat-value" id="statCommands">0</div>
+        </div>
+        <div class="stat-card glass-card">
+          <div class="stat-label">Captchas Solved</div>
+          <div class="stat-value yellow" id="statCaptchas">0</div>
+        </div>
+      </div>
+
+      <div class="glass-card mt-20">
+        <h2 class="section-title">Account Status Board</h2>
+        <div class="account-board" id="accountBoard">
+          <div class="empty-state">No accounts running. Add accounts first.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACCOUNTS TAB -->
+    <div class="tab" id="tab-accounts">
+      <div class="tab-header">
+        <h1 class="tab-title">Accounts</h1>
+        <button class="btn btn-green" onclick="openAddModal()">+ ADD ACCOUNT</button>
+      </div>
+      <div class="glass-card">
+        <table class="data-table" id="accountsTable">
+          <thead>
+            <tr>
+              <th>#</th><th>Name</th><th>Channel</th><th>Proxy</th>
+              <th>Status</th><th>Hunts</th><th>Balance</th><th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="accountsBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- GIVE TAB -->
+    <div class="tab" id="tab-give">
+      <div class="tab-header">
+        <h1 class="tab-title">Give All</h1>
+      </div>
+      <div class="glass-card form-card">
+        <div class="form-group">
+          <label>Target User ID</label>
+          <input type="text" id="giveUID" placeholder="Discord User ID e.g. 123456789012345678"/>
+        </div>
+        <div class="form-group">
+          <label>Amount (cowoncy per account)</label>
+          <input type="number" id="giveAmount" value="1000" min="1"/>
+        </div>
+        <button class="btn btn-purple btn-wide" onclick="giveAll()">💸 SEND FROM ALL ACCOUNTS</button>
+        <div class="give-result glass-card mt-20" id="giveResult" style="display:none"></div>
+      </div>
+    </div>
+
+    <!-- CAPTCHA KEYS TAB -->
+    <div class="tab" id="tab-captcha">
+      <div class="tab-header">
+        <h1 class="tab-title">Captcha Keys</h1>
+        <button class="btn btn-green" onclick="openAddKeyModal()">+ ADD KEY</button>
+      </div>
+      <div class="glass-card">
+        <div class="info-box">
+          <b>Without a key:</b> accounts will auto-pause on captcha and resume manually.<br/>
+          <b>With capsolver/2captcha key:</b> captchas are auto-solved and accounts resume instantly.
+        </div>
+        <table class="data-table" id="keysTable">
+          <thead><tr><th>#</th><th>Provider</th><th>Key (masked)</th><th>Actions</th></tr></thead>
+          <tbody id="keysBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- SETTINGS TAB -->
+    <div class="tab" id="tab-settings">
+      <div class="tab-header">
+        <h1 class="tab-title">Settings</h1>
+        <button class="btn btn-green" onclick="saveSettings()">💾 SAVE</button>
+      </div>
+      <div class="settings-grid">
+        <div class="glass-card settings-section">
+          <h3>Sell Settings</h3>
+          <div class="form-group">
+            <label>Sell Interval (minutes)</label>
+            <input type="number" id="set_sell_interval_minutes" value="60"/>
+          </div>
+          <div class="form-group">
+            <label>Sell What (all / common / uncommon / rare)</label>
+            <input type="text" id="set_sell_what" value="all"/>
+          </div>
+        </div>
+        <div class="glass-card settings-section">
+          <h3>Command Toggles</h3>
+          <div class="toggle-row"><label>Hunt</label><input type="checkbox" id="set_hunt_enabled" checked class="toggle-cb"/></div>
+          <div class="toggle-row"><label>Battle</label><input type="checkbox" id="set_battle_enabled" checked class="toggle-cb"/></div>
+          <div class="toggle-row"><label>Pray</label><input type="checkbox" id="set_pray_enabled" checked class="toggle-cb"/></div>
+          <div class="toggle-row"><label>Curse</label><input type="checkbox" id="set_curse_enabled" checked class="toggle-cb"/></div>
+          <div class="toggle-row"><label>Daily</label><input type="checkbox" id="set_daily_enabled" checked class="toggle-cb"/></div>
+        </div>
+        <div class="glass-card settings-section">
+          <h3>Hunt Timing (seconds)</h3>
+          <div class="form-group">
+            <label>Min Delay</label>
+            <input type="number" id="set_hunt_min_delay" value="15"/>
+          </div>
+          <div class="form-group">
+            <label>Max Delay</label>
+            <input type="number" id="set_hunt_max_delay" value="20"/>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LOGS TAB -->
+    <div class="tab" id="tab-logs">
+      <div class="tab-header">
+        <h1 class="tab-title">Live Logs</h1>
+        <button class="btn btn-red" onclick="clearLogs()">🗑 CLEAR</button>
+      </div>
+      <div class="glass-card log-box" id="logBox"></div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ADD ACCOUNT MODAL -->
+<div class="modal-overlay" id="addModal">
+  <div class="modal glass-card">
+    <h2>Add Account</h2>
+    <div class="form-group"><label>Name</label><input type="text" id="newName" placeholder="MyAccount1"/></div>
+    <div class="form-group"><label>Discord Token</label><input type="password" id="newToken" placeholder="Token"/></div>
+    <div class="form-group"><label>Channel ID</label><input type="text" id="newChannel" placeholder="123456789"/></div>
+    <div class="form-group"><label>Proxy (optional)</label><input type="text" id="newProxy" placeholder="socks5://user:pass@host:port"/></div>
+    <div class="btn-group mt-20">
+      <button class="btn btn-green" onclick="addAccount()">ADD</button>
+      <button class="btn btn-red" onclick="closeModal('addModal')">CANCEL</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD KEY MODAL -->
+<div class="modal-overlay" id="addKeyModal">
+  <div class="modal glass-card">
+    <h2>Add Captcha Key</h2>
+    <div class="form-group">
+      <label>Provider</label>
+      <select id="newKeyProvider">
+        <option value="capsolver">Capsolver</option>
+        <option value="2captcha">2Captcha</option>
+      </select>
+    </div>
+    <div class="form-group"><label>API Key</label><input type="text" id="newKey" placeholder="Your API key"/></div>
+    <div class="btn-group mt-20">
+      <button class="btn btn-green" onclick="addKey()">ADD</button>
+      <button class="btn btn-red" onclick="closeModal('addKeyModal')">CANCEL</button>
+    </div>
+  </div>
+</div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>
