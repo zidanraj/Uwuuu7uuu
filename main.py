@@ -1,3 +1,4 @@
+
 # main.py — Flask entry point, Socket.IO server, Render startup target
 
 import os
@@ -114,4 +115,10 @@ def on_connect():
 if __name__ == '__main__':
     init_db()
     port = int(os.environ.get('PORT', 5000))
-    socketio.run(app, host='0.0.0.0', port=port, debug=False)
+    socketio.run(
+        app,
+        host='0.0.0.0',
+        port=port,
+        debug=False,
+        allow_unsafe_werkzeug=True
+    )
